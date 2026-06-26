@@ -18,3 +18,16 @@ Important:
 5. On iPhone/iPad, open the page in Safari, tap Share, and choose Add to Home Screen.
 6. A Zenler HTML lesson may run the trainer, but a PWA is most reliable when hosted at its
    own HTTPS URL where the service worker can control the app's directory.
+
+
+IPHONE AUDIO UPDATE
+-------------------
+This version requests the iOS playback audio-session type and explicitly
+unlocks Web Audio from the Start-button gesture.
+
+To update an existing GitHub Pages deployment:
+1. Replace index.html and service-worker.js in the repository.
+2. Commit the changes.
+3. Wait for the Pages deployment to finish.
+4. On an iPhone that installed the old version, remove the old Home Screen app,
+   visit the website again in Safari, and add it to the Home Screen again.

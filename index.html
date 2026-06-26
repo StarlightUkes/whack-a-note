@@ -546,6 +546,60 @@
       }
     }
 
+    function configureAudioSession() {
+      // Safari on recent iOS versions exposes the Audio Session API.
+      // "playback" allows this music-training app to behave like media audio
+      // instead of ambient interface sound.
+      if (navigator.audioSession && "type" in navigator.audioSession) {
+        try {
+          navigator.audioSession.type = "playback";
+        } catch (error) {
+          console.warn("Could not set the audio session type:", error);
+        }
+      }
+    }
+
+    async function unlockAudioContext() {
+      configureAudioSession();
+
+      if (!audioContext) {
+        const AudioContextClass =
+          window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+          throw new Error("This browser does not support Web Audio.");
+        }
+
+        audioContext = new AudioContextClass({
+          latencyHint: "interactive"
+        });
+      }
+
+      // resume() is called directly from the Start-button gesture.
+      const resumePromise =
+        audioContext.state === "suspended"
+          ? audioContext.resume()
+          : Promise.resolve();
+
+      // Prime the iOS audio pipeline with a nearly silent, very short source.
+      // This is deliberately started during the same user gesture.
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      gain.gain.setValueAtTime(0.00001, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.02);
+
+      await resumePromise;
+
+      if (audioContext.state !== "running") {
+        throw new Error("Audio remains suspended.");
+      }
+    }
+
     async function startTrainer() {
       if (running) {
         return;
@@ -559,18 +613,22 @@
       }
 
       tempoInput.value = String(getTempo());
+      statusDisplay.textContent = "Starting audio…";
 
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        await unlockAudioContext();
+      } catch (error) {
+        console.error(error);
+        statusDisplay.textContent =
+          "Audio could not start. Turn up the iPhone media volume, then tap Start again.";
+        return;
       }
-
-      await audioContext.resume();
 
       running = true;
       currentBeat = 1;
       currentNote = null;
       previousSelectionKey = null;
-      nextBeatTime = audioContext.currentTime + 0.08;
+      nextBeatTime = audioContext.currentTime + 0.12;
 
       startButton.disabled = true;
       stopButton.disabled = false;
@@ -598,6 +656,20 @@
       startButton.disabled = false;
       stopButton.disabled = true;
     }
+
+
+    document.addEventListener("visibilitychange", function () {
+      if (
+        !document.hidden &&
+        running &&
+        audioContext &&
+        audioContext.state === "suspended"
+      ) {
+        stopTrainer();
+        statusDisplay.textContent =
+          "Audio was paused by iOS. Tap Start to resume.";
+      }
+    });
 
     startButton.addEventListener("click", startTrainer);
     stopButton.addEventListener("click", stopTrainer);

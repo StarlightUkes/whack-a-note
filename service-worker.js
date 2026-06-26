@@ -1,4 +1,4 @@
-const CACHE_NAME = "whack-a-note-v1";
+const CACHE_NAME = "whack-a-note-v2-ios-audio";
 const APP_SHELL = [
   "./",
   "./index.html",
