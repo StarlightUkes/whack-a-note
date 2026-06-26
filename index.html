@@ -53,6 +53,30 @@
     .subtitle {
       margin: 0 0 24px;
       color: #cbd5e1;
+      line-height: 1.55;
+    }
+
+    .instructions {
+      margin: 0 0 14px;
+      font-size: 1.05rem;
+    }
+
+    .instrument-ranges {
+      margin: 0;
+      padding: 14px 16px;
+      border: 1px solid #475569;
+      border-radius: 12px;
+      background: #0f172a;
+    }
+
+    .instrument-ranges strong {
+      display: block;
+      margin-bottom: 7px;
+      color: #f8fafc;
+    }
+
+    .range-line {
+      display: block;
     }
 
     .controls {
@@ -233,9 +257,19 @@
 <body>
   <main class="app">
     <h1>Whack-A-Note</h1>
-    <p class="subtitle">
-      A new note appears on beat 1. Clicks sound on beats 1–3, and the note sounds on beat 4.
-    </p>
+    <div class="subtitle">
+      <p class="instructions">
+        A new note appears on beat 1.<br />
+        Play that note on beat 4.
+      </p>
+
+      <div class="instrument-ranges">
+        <strong>Instrument Ranges</strong>
+        <span class="range-line">Low-G Ukulele: G3–A5</span>
+        <span class="range-line">Baritone Ukulele: D3–E5</span>
+        <span class="range-line">Bass: E1–C4</span>
+      </div>
+    </div>
 
     <section class="controls" aria-label="Trainer controls">
       <label>
