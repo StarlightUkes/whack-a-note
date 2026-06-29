@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Whack-A-Note",
   "short_name": "Whack-A-Note",
-  "description": "A random-note rhythm trainer that shows a note on beat 1, clicks beats 1–3, and plays the note on beat 4.",
+  "description": "A two-mode random-note trainer with clear organ-style reference tones.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

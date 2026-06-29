@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <meta name="description" content="A random-note rhythm trainer that shows a note on beat 1 and plays it on beat 4." />
-  <meta name="application-name" content="Note Beat Trainer" />
+  <meta name="description" content="A two-mode random-note trainer with clear organ-style reference tones." />
+  <meta name="application-name" content="Whack-A-Note" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Whack-A-Note" />
@@ -81,7 +81,7 @@
 
     .controls {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 20px;
     }
@@ -258,7 +258,7 @@
   <main class="app">
     <h1>Whack-A-Note</h1>
     <div class="subtitle">
-      <p class="instructions">
+      <p id="modeInstructions" class="instructions">
         A new note appears on beat 1.<br />
         Play that note on beat 4.
       </p>
@@ -272,6 +272,14 @@
     </div>
 
     <section class="controls" aria-label="Trainer controls">
+      <label>
+        Mode
+        <select id="mode">
+          <option value="root">Root Mode</option>
+          <option value="rootFifth">Root–Fifth Mode</option>
+        </select>
+      </label>
+
       <label>
         Tempo
         <input id="tempo" type="number" min="30" max="240" step="1" value="80" />
@@ -290,7 +298,7 @@
 
     <div class="check-options" aria-label="Accidental options">
       <label class="check-row">
-        <input id="includeSharps" type="checkbox" checked />
+        <input id="includeSharps" type="checkbox" />
         Include sharps
       </label>
 
@@ -342,6 +350,8 @@
 
     const naturalPitchClasses = new Set([0, 2, 4, 5, 7, 9, 11]);
 
+    const modeSelect = document.getElementById("mode");
+    const modeInstructions = document.getElementById("modeInstructions");
     const tempoInput = document.getElementById("tempo");
     const lowNoteSelect = document.getElementById("lowNote");
     const highNoteSelect = document.getElementById("highNote");
@@ -403,6 +413,35 @@
 
       lowNoteSelect.value = "48";
       highNoteSelect.value = "72";
+    }
+
+    function applyModeDefaults() {
+      if (modeSelect.value === "rootFifth") {
+        // Root–Fifth Mode default range: A1 through C3.
+        lowNoteSelect.value = "33";
+        highNoteSelect.value = "48";
+      } else {
+        // Root Mode default range: G1 through C3.
+        lowNoteSelect.value = "31";
+        highNoteSelect.value = "48";
+      }
+    }
+
+    function updateModeInstructions() {
+      if (modeSelect.value === "rootFifth") {
+        modeInstructions.innerHTML =
+          "A new note appears on beat 1.<br />" +
+          "Play that note on beat 3, then play the note a perfect fourth below on beat 4.";
+      } else {
+        modeInstructions.innerHTML =
+          "A new note appears on beat 1.<br />" +
+          "Play that note on beat 4.";
+      }
+    }
+
+    function handleModeChange() {
+      applyModeDefaults();
+      updateModeInstructions();
     }
 
     function getTempo() {
@@ -501,22 +540,73 @@
     }
 
     function playNote(time, frequency, duration) {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
+      /*
+       * Clear-pitch organ-style reference tone.
+       *
+       * A stable harmonic complex is easier to identify by pitch than a very
+       * short or noisy plucked sound. Strong upper harmonics also preserve the
+       * perceived low note on phone and tablet speakers that cannot reproduce
+       * the fundamental frequency strongly.
+       */
+      const noteDuration = Math.max(0.28, duration);
+      const noteEnd = time + noteDuration;
 
-      oscillator.type = "triangle";
-      oscillator.frequency.setValueAtTime(frequency, time);
+      const masterGain = audioContext.createGain();
+      const warmthFilter = audioContext.createBiquadFilter();
 
-      gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(0.34, time + 0.02);
-      gain.gain.setValueAtTime(0.34, time + Math.max(0.03, duration * 0.55));
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      warmthFilter.type = "lowpass";
+      warmthFilter.Q.setValueAtTime(0.55, time);
+      warmthFilter.frequency.setValueAtTime(
+        Math.min(5200, Math.max(1400, frequency * 18)),
+        time
+      );
 
-      oscillator.connect(gain);
-      gain.connect(audioContext.destination);
+      // Smooth onset and release avoid clicks while keeping the pitch stable.
+      masterGain.gain.setValueAtTime(0.0001, time);
+      masterGain.gain.exponentialRampToValueAtTime(0.34, time + 0.018);
+      masterGain.gain.setValueAtTime(
+        0.34,
+        time + Math.max(0.025, noteDuration * 0.64)
+      );
+      masterGain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        noteEnd
+      );
 
-      oscillator.start(time);
-      oscillator.stop(time + duration + 0.02);
+      warmthFilter.connect(masterGain);
+      masterGain.connect(audioContext.destination);
+
+      // Fundamental plus clear harmonics. The slightly stronger second and
+      // third harmonics keep G1–C3 audible on small speakers.
+      const partials = [
+        { multiple: 1, level: 0.72, type: "sine" },
+        { multiple: 2, level: 0.34, type: "sine" },
+        { multiple: 3, level: 0.22, type: "sine" },
+        { multiple: 4, level: 0.12, type: "sine" },
+        { multiple: 5, level: 0.07, type: "sine" }
+      ];
+
+      partials.forEach(function (partial) {
+        const oscillator = audioContext.createOscillator();
+        const partialGain = audioContext.createGain();
+
+        oscillator.type = partial.type;
+        oscillator.frequency.setValueAtTime(
+          frequency * partial.multiple,
+          time
+        );
+
+        partialGain.gain.setValueAtTime(
+          partial.level,
+          time
+        );
+
+        oscillator.connect(partialGain);
+        partialGain.connect(warmthFilter);
+
+        oscillator.start(time);
+        oscillator.stop(noteEnd + 0.03);
+      });
     }
 
     function scheduleUiChange(time, callback) {
@@ -539,6 +629,7 @@
 
     function scheduleBeat(beat, time) {
       const secondsPerBeat = 60 / getTempo();
+      const mode = modeSelect.value;
 
       if (beat === 1) {
         currentNote = chooseRandomNote();
@@ -555,12 +646,23 @@
         showBeat(beat);
       });
 
-      if (beat === 4) {
-        if (currentNote) {
-          playNote(time, currentNote.frequency, secondsPerBeat * 0.78);
+      if (mode === "rootFifth") {
+        if (beat === 3 && currentNote) {
+          playNote(time, currentNote.frequency, secondsPerBeat * 0.68);
+        } else if (beat === 4 && currentNote) {
+          const fifthBelowFrequency =
+            midiToFrequency(currentNote.midi - 5);
+
+          playNote(time, fifthBelowFrequency, secondsPerBeat * 0.78);
+        } else {
+          playClick(time, beat === 1);
         }
       } else {
-        playClick(time, beat === 1);
+        if (beat === 4 && currentNote) {
+          playNote(time, currentNote.frequency, secondsPerBeat * 0.78);
+        } else {
+          playClick(time, beat === 1);
+        }
       }
     }
 
@@ -664,9 +766,13 @@
       previousSelectionKey = null;
       nextBeatTime = audioContext.currentTime + 0.12;
 
+      modeSelect.disabled = true;
       startButton.disabled = true;
       stopButton.disabled = false;
-      statusDisplay.textContent = "Running";
+      statusDisplay.textContent =
+        modeSelect.value === "rootFifth"
+          ? "Running — Root–Fifth Mode"
+          : "Running — Root Mode";
 
       scheduler();
       schedulerTimer = window.setInterval(scheduler, schedulerIntervalMs);
@@ -687,6 +793,7 @@
       noteDisplay.textContent = "—";
       frequencyDisplay.textContent = "Press Start";
       statusDisplay.textContent = "Stopped";
+      modeSelect.disabled = false;
       startButton.disabled = false;
       stopButton.disabled = true;
     }
@@ -705,6 +812,7 @@
       }
     });
 
+    modeSelect.addEventListener("change", handleModeChange);
     startButton.addEventListener("click", startTrainer);
     stopButton.addEventListener("click", stopTrainer);
 
@@ -784,6 +892,7 @@
     configureInstallUi();
 
     populateNoteSelectors();
+    handleModeChange();
   </script>
 </body>
 </html>
