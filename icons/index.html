@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Whack-A-Note is a free random-note rhythm trainer from Starlight Ukes. A note appears on beat 1 and sounds on beat 4." />
+  <meta name="application-name" content="Whack-A-Note" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Whack-A-Note" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
+  <title>Whack-A-Note | Starlight Ukes</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding:
+        max(16px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+      display: grid;
+      place-items: center;
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    .app {
+      width: min(720px, calc(100% - 32px));
+      padding: 28px;
+      border-radius: 22px;
+      background: #1f2937;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+    }
+
+    .brandline {
+      margin: 0 0 10px;
+      color: #7dd3fc;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .brandline a,
+    .app-footer a {
+      color: inherit;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      font-size: 0.92rem;
+      color: #dbeafe;
+    }
+
+    input,
+    select,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    .check-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin: 4px 0 20px;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #e2e8f0;
+    }
+
+    .check-row input {
+      width: auto;
+      transform: scale(1.2);
+    }
+
+    .display {
+      display: grid;
+      place-items: center;
+      min-height: 250px;
+      margin-bottom: 20px;
+      border-radius: 18px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      text-align: center;
+    }
+
+    .note {
+      font-size: clamp(5rem, 20vw, 10rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.06em;
+    }
+
+    .frequency {
+      margin-top: 12px;
+      color: #94a3b8;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .beats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .beat {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1.8 / 1;
+      border-radius: 12px;
+      background: #334155;
+      color: #cbd5e1;
+      font-size: 1.25rem;
+      font-weight: 700;
+      transition: transform 80ms linear, background 80ms linear, color 80ms linear;
+    }
+
+    .beat.active {
+      transform: scale(1.04);
+      background: #f59e0b;
+      color: #111827;
+    }
+
+    .beat.four {
+      border: 1px solid #64748b;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    button {
+      padding: 13px 18px;
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    #startButton {
+      background: #22c55e;
+      color: #052e16;
+    }
+
+    #stopButton {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .status {
+      min-height: 1.5em;
+      margin: 14px 0 0;
+      color: #cbd5e1;
+      text-align: center;
+    }
+
+    .install-panel,
+    .help-panel {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid #475569;
+      border-radius: 12px;
+      background: #0f172a;
+    }
+
+    .install-panel {
+      text-align: center;
+    }
+
+    .install-panel[hidden] {
+      display: none;
+    }
+
+    #installButton {
+      width: 100%;
+      background: #38bdf8;
+      color: #082f49;
+    }
+
+    .install-help {
+      margin: 10px 0 0;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .help-panel summary {
+      cursor: pointer;
+      color: #e2e8f0;
+      font-weight: 750;
+    }
+
+    .help-panel ol,
+    .help-panel ul {
+      padding-left: 1.25rem;
+    }
+
+    .help-panel li,
+    .help-panel p {
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .range-list {
+      margin-bottom: 0;
+    }
+
+    .app-footer {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #475569;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .app-footer strong {
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .app {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>Whack-A-Note</h1>
+    <p class="brandline">
+      A free music-learning game from
+      <a href="https://starlightukes.com" target="_blank" rel="noopener noreferrer">Starlight Ukes</a>
+    </p>
+    <p class="subtitle">
+      A new note appears on beat 1. Play that note on beat 4. The game sounds the note on beat 4 so you can check yourself.
+    </p>
+
+    <section class="controls" aria-label="Trainer controls">
+      <label>
+        Tempo
+        <input id="tempo" type="number" min="30" max="240" step="1" value="80" />
+      </label>
+
+      <label>
+        Lowest note
+        <select id="lowNote"></select>
+      </label>
+
+      <label>
+        Highest note
+        <select id="highNote"></select>
+      </label>
+    </section>
+
+    <div class="check-options" aria-label="Accidental options">
+      <label class="check-row">
+        <input id="includeSharps" type="checkbox" checked />
+        Include sharps
+      </label>
+
+      <label class="check-row">
+        <input id="includeFlats" type="checkbox" />
+        Include flats
+      </label>
+    </div>
+
+    <section class="display" aria-live="polite">
+      <div>
+        <div id="noteDisplay" class="note">—</div>
+        <div id="frequencyDisplay" class="frequency">Press Start</div>
+      </div>
+    </section>
+
+    <section class="beats" aria-label="Beat indicator">
+      <div class="beat" data-beat="1">1</div>
+      <div class="beat" data-beat="2">2</div>
+      <div class="beat" data-beat="3">3</div>
+      <div class="beat four" data-beat="4">4</div>
+    </section>
+
+    <section class="actions">
+      <button id="startButton" type="button">Start</button>
+      <button id="stopButton" type="button" disabled>Stop</button>
+    </section>
+
+    <p id="status" class="status"></p>
+
+    <section id="installPanel" class="install-panel" hidden>
+      <button id="installButton" type="button">Install App</button>
+      <p id="installHelp" class="install-help"></p>
+    </section>
+
+    <details class="help-panel">
+      <summary>How to Play</summary>
+      <ol>
+        <li>Choose the lowest and highest notes you want to practice.</li>
+        <li>Choose whether to include sharps, flats, or both.</li>
+        <li>Set a comfortable tempo and press <strong>Start</strong>.</li>
+        <li>A new note appears on beat 1. Find and play it on beat 4.</li>
+        <li>Listen to the reference note on beat 4 to check your answer.</li>
+      </ol>
+      <p><strong>Suggested ranges</strong></p>
+      <ul class="range-list">
+        <li>Low-G ukulele: G3–A5</li>
+        <li>Baritone ukulele: D3–E5</li>
+        <li>Bass: E1–C4</li>
+      </ul>
+    </details>
+
+    <footer class="app-footer">
+      <strong>Whack-A-Note</strong> is a free educational game from
+      <a href="https://starlightukes.com" target="_blank" rel="noopener noreferrer">Starlight Ukes</a>.
+      You may share it freely, provided the Starlight Ukes branding and attribution remain intact.
+      <br />© 2026 Starlight Ukes
+    </footer>
+  </main>
+
+  <script>
+    "use strict";
+
+    const sharpNoteNames = [
+      "C", "C♯", "D", "D♯", "E", "F",
+      "F♯", "G", "G♯", "A", "A♯", "B"
+    ];
+
+    const flatNoteNames = [
+      "C", "D♭", "D", "E♭", "E", "F",
+      "G♭", "G", "A♭", "A", "B♭", "B"
+    ];
+
+    const naturalPitchClasses = new Set([0, 2, 4, 5, 7, 9, 11]);
+
+    const tempoInput = document.getElementById("tempo");
+    const lowNoteSelect = document.getElementById("lowNote");
+    const highNoteSelect = document.getElementById("highNote");
+    const includeSharpsInput = document.getElementById("includeSharps");
+    const includeFlatsInput = document.getElementById("includeFlats");
+    const noteDisplay = document.getElementById("noteDisplay");
+    const frequencyDisplay = document.getElementById("frequencyDisplay");
+    const startButton = document.getElementById("startButton");
+    const stopButton = document.getElementById("stopButton");
+    const statusDisplay = document.getElementById("status");
+    const installPanel = document.getElementById("installPanel");
+    const installButton = document.getElementById("installButton");
+    const installHelp = document.getElementById("installHelp");
+    const beatElements = Array.from(document.querySelectorAll(".beat"));
+
+    let audioContext = null;
+    let schedulerTimer = null;
+    let nextBeatTime = 0;
+    let currentBeat = 1;
+    let currentNote = null;
+    let previousSelectionKey = null;
+    let running = false;
+    let deferredInstallPrompt = null;
+
+    const scheduleAheadSeconds = 0.12;
+    const schedulerIntervalMs = 25;
+
+    function midiToFrequency(midi) {
+      return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function midiToSharpLabel(midi) {
+      const pitchClass = ((midi % 12) + 12) % 12;
+      const octave = Math.floor(midi / 12) - 1;
+      return sharpNoteNames[pitchClass] + octave;
+    }
+
+    function midiToAccidentalLabel(midi, useFlats) {
+      const pitchClass = ((midi % 12) + 12) % 12;
+      const octave = Math.floor(midi / 12) - 1;
+      const names = useFlats ? flatNoteNames : sharpNoteNames;
+      return names[pitchClass] + octave;
+    }
+
+    function populateNoteSelectors() {
+      for (let midi = 28; midi <= 84; midi++) {
+        const label = midiToSharpLabel(midi);
+
+        const lowOption = document.createElement("option");
+        lowOption.value = String(midi);
+        lowOption.textContent = label;
+        lowNoteSelect.appendChild(lowOption);
+
+        const highOption = document.createElement("option");
+        highOption.value = String(midi);
+        highOption.textContent = label;
+        highNoteSelect.appendChild(highOption);
+      }
+
+      lowNoteSelect.value = "48";
+      highNoteSelect.value = "72";
+    }
+
+    function getTempo() {
+      const value = Number(tempoInput.value);
+      return Math.min(240, Math.max(30, Number.isFinite(value) ? value : 80));
+    }
+
+    function getAvailableNoteChoices() {
+      let low = Number(lowNoteSelect.value);
+      let high = Number(highNoteSelect.value);
+
+      if (low > high) {
+        const temp = low;
+        low = high;
+        high = temp;
+      }
+
+      const choices = [];
+
+      for (let midi = low; midi <= high; midi++) {
+        const pitchClass = ((midi % 12) + 12) % 12;
+        const isNatural = naturalPitchClasses.has(pitchClass);
+
+        if (isNatural) {
+          const label = midiToSharpLabel(midi);
+          choices.push({
+            midi: midi,
+            label: label,
+            key: midi + ":natural"
+          });
+          continue;
+        }
+
+        if (includeSharpsInput.checked) {
+          choices.push({
+            midi: midi,
+            label: midiToAccidentalLabel(midi, false),
+            key: midi + ":sharp"
+          });
+        }
+
+        if (includeFlatsInput.checked) {
+          choices.push({
+            midi: midi,
+            label: midiToAccidentalLabel(midi, true),
+            key: midi + ":flat"
+          });
+        }
+      }
+
+      return choices;
+    }
+
+    function chooseRandomNote() {
+      const choices = getAvailableNoteChoices();
+
+      if (choices.length === 0) {
+        throw new Error("No notes are available in the selected range.");
+      }
+
+      let choice = choices[Math.floor(Math.random() * choices.length)];
+
+      if (choices.length > 1 && choice.key === previousSelectionKey) {
+        const alternatives = choices.filter(function (value) {
+          return value.key !== previousSelectionKey;
+        });
+
+        choice = alternatives[Math.floor(Math.random() * alternatives.length)];
+      }
+
+      previousSelectionKey = choice.key;
+
+      return {
+        midi: choice.midi,
+        label: choice.label,
+        frequency: midiToFrequency(choice.midi)
+      };
+    }
+
+    function playClick(time, accented) {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(accented ? 1500 : 1100, time);
+
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.exponentialRampToValueAtTime(accented ? 0.28 : 0.18, time + 0.003);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.045);
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+
+      oscillator.start(time);
+      oscillator.stop(time + 0.05);
+    }
+
+    function playNote(time, frequency, duration) {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(frequency, time);
+
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.exponentialRampToValueAtTime(0.34, time + 0.02);
+      gain.gain.setValueAtTime(0.34, time + Math.max(0.03, duration * 0.55));
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+
+      oscillator.start(time);
+      oscillator.stop(time + duration + 0.02);
+    }
+
+    function scheduleUiChange(time, callback) {
+      const delayMs = Math.max(0, (time - audioContext.currentTime) * 1000);
+      window.setTimeout(function () {
+        if (running) {
+          callback();
+        }
+      }, delayMs);
+    }
+
+    function showBeat(beat) {
+      beatElements.forEach(function (element) {
+        element.classList.toggle(
+          "active",
+          Number(element.dataset.beat) === beat
+        );
+      });
+    }
+
+    function scheduleBeat(beat, time) {
+      const secondsPerBeat = 60 / getTempo();
+
+      if (beat === 1) {
+        currentNote = chooseRandomNote();
+        const noteForThisMeasure = currentNote;
+
+        scheduleUiChange(time, function () {
+          noteDisplay.textContent = noteForThisMeasure.label;
+          frequencyDisplay.textContent =
+            noteForThisMeasure.frequency.toFixed(2) + " Hz";
+        });
+      }
+
+      scheduleUiChange(time, function () {
+        showBeat(beat);
+      });
+
+      if (beat === 4) {
+        if (currentNote) {
+          playNote(time, currentNote.frequency, secondsPerBeat * 0.78);
+        }
+      } else {
+        playClick(time, beat === 1);
+      }
+    }
+
+    function advanceBeat() {
+      const secondsPerBeat = 60 / getTempo();
+      nextBeatTime += secondsPerBeat;
+      currentBeat = currentBeat === 4 ? 1 : currentBeat + 1;
+    }
+
+    function scheduler() {
+      while (
+        running &&
+        nextBeatTime < audioContext.currentTime + scheduleAheadSeconds
+      ) {
+        scheduleBeat(currentBeat, nextBeatTime);
+        advanceBeat();
+      }
+    }
+
+    async function startTrainer() {
+      if (running) {
+        return;
+      }
+
+      const availableNotes = getAvailableNoteChoices();
+
+      if (availableNotes.length === 0) {
+        statusDisplay.textContent = "No notes are available in the selected range.";
+        return;
+      }
+
+      tempoInput.value = String(getTempo());
+
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      await audioContext.resume();
+
+      running = true;
+      currentBeat = 1;
+      currentNote = null;
+      previousSelectionKey = null;
+      nextBeatTime = audioContext.currentTime + 0.08;
+
+      startButton.disabled = true;
+      stopButton.disabled = false;
+      statusDisplay.textContent = "Running";
+
+      scheduler();
+      schedulerTimer = window.setInterval(scheduler, schedulerIntervalMs);
+    }
+
+    function stopTrainer() {
+      running = false;
+
+      if (schedulerTimer !== null) {
+        window.clearInterval(schedulerTimer);
+        schedulerTimer = null;
+      }
+
+      beatElements.forEach(function (element) {
+        element.classList.remove("active");
+      });
+
+      noteDisplay.textContent = "—";
+      frequencyDisplay.textContent = "Press Start";
+      statusDisplay.textContent = "Stopped";
+      startButton.disabled = false;
+      stopButton.disabled = true;
+    }
+
+    startButton.addEventListener("click", startTrainer);
+    stopButton.addEventListener("click", stopTrainer);
+
+    lowNoteSelect.addEventListener("change", function () {
+      if (Number(lowNoteSelect.value) > Number(highNoteSelect.value)) {
+        highNoteSelect.value = lowNoteSelect.value;
+      }
+    });
+
+    highNoteSelect.addEventListener("change", function () {
+      if (Number(highNoteSelect.value) < Number(lowNoteSelect.value)) {
+        lowNoteSelect.value = highNoteSelect.value;
+      }
+    });
+
+    function isStandalone() {
+      return window.matchMedia("(display-mode: standalone)").matches ||
+             window.navigator.standalone === true;
+    }
+
+    function isAppleMobileDevice() {
+      return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    }
+
+    function configureInstallUi() {
+      if (isStandalone()) {
+        installPanel.hidden = true;
+        return;
+      }
+
+      if (isAppleMobileDevice()) {
+        installPanel.hidden = false;
+        installButton.hidden = true;
+        installHelp.textContent =
+          "To install on iPhone or iPad: open this page in Safari, tap Share, then choose Add to Home Screen.";
+      }
+    }
+
+    window.addEventListener("beforeinstallprompt", function (event) {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+
+      if (!isStandalone()) {
+        installPanel.hidden = false;
+        installButton.hidden = false;
+        installHelp.textContent =
+          "Install this trainer for full-screen use and offline access.";
+      }
+    });
+
+    installButton.addEventListener("click", async function () {
+      if (!deferredInstallPrompt) {
+        return;
+      }
+
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installPanel.hidden = true;
+    });
+
+    window.addEventListener("appinstalled", function () {
+      deferredInstallPrompt = null;
+      installPanel.hidden = true;
+      statusDisplay.textContent = "App installed";
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./service-worker.js").catch(function (error) {
+          console.error("Service worker registration failed:", error);
+        });
+      });
+    }
+
+    configureInstallUi();
+    populateNoteSelectors();
+  </script>
+</body>
+</html>
