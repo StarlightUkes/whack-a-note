@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <meta name="description" content="Whack-A-Note is a free random-note rhythm trainer from Starlight Ukes. A note appears on beat 1 and sounds on beat 4." />
+  <meta name="description" content="Whack-A-Note is a free two-mode random-note rhythm trainer from Starlight Ukes for root and root-fifth practice." />
   <meta name="application-name" content="Whack-A-Note" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -46,32 +46,47 @@
     }
 
     h1 {
-      margin: 0 0 6px;
+      margin: 0 0 8px;
       font-size: clamp(1.6rem, 4vw, 2.4rem);
-    }
-
-    .brandline {
-      margin: 0 0 10px;
-      color: #7dd3fc;
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .brandline a,
-    .app-footer a {
-      color: inherit;
     }
 
     .subtitle {
       margin: 0 0 24px;
       color: #cbd5e1;
-      line-height: 1.5;
+      line-height: 1.55;
+    }
+
+    .instructions {
+      margin: 0 0 14px;
+      font-size: 1.05rem;
+    }
+
+    .instrument-ranges {
+      margin: 0;
+      padding: 14px 16px;
+      border: 1px solid #475569;
+      border-radius: 12px;
+      background: #0f172a;
+    }
+
+    .instrument-ranges strong {
+      display: block;
+      margin-bottom: 7px;
+      color: #f8fafc;
+    }
+
+    .range-line {
+      display: block;
+    }
+    
+    .brandline a,
+    .app-footer a {
+      color: inherit;
     }
 
     .controls {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 20px;
     }
@@ -290,11 +305,26 @@
       A free music-learning game from
       <a href="https://starlightukes.com" target="_blank" rel="noopener noreferrer">Starlight Ukes</a>
     </p>
-    <p class="subtitle">
+    <p id="modeInstructions" class="subtitle">
       A new note appears on beat 1. Play that note on beat 4. The game sounds the note on beat 4 so you can check yourself.
     </p>
 
+      <div class="instrument-ranges">
+        <strong>Instrument Ranges</strong>
+        <span class="range-line">Low-G Ukulele: G3–A5</span>
+        <span class="range-line">Baritone Ukulele: D3–E5</span>
+        <span class="range-line">Bass: E1–C4</span>
+      </div>
+
     <section class="controls" aria-label="Trainer controls">
+      <label>
+        Mode
+        <select id="mode">
+          <option value="root">Root Mode</option>
+          <option value="rootFifth">Root–Fifth Mode</option>
+        </select>
+      </label>
+
       <label>
         Tempo
         <input id="tempo" type="number" min="30" max="240" step="1" value="80" />
@@ -313,7 +343,7 @@
 
     <div class="check-options" aria-label="Accidental options">
       <label class="check-row">
-        <input id="includeSharps" type="checkbox" checked />
+        <input id="includeSharps" type="checkbox" />
         Include sharps
       </label>
 
@@ -351,14 +381,38 @@
 
     <details class="help-panel">
       <summary>How to Play</summary>
+
+      <p><strong>Choose a mode</strong></p>
+      <ul>
+        <li>
+          <strong>Root Mode:</strong> A note appears on beat 1.
+          Play that note on beat 4, when the reference tone sounds.
+        </li>
+        <li>
+          <strong>Root–Fifth Mode:</strong> A root appears on beat 1.
+          Play the root on beat 3, then play the note a perfect fourth below
+          on beat 4. Those two notes form a root–fifth pattern.
+        </li>
+      </ul>
+
+      <p><strong>Set up your practice</strong></p>
       <ol>
         <li>Choose the lowest and highest notes you want to practice.</li>
-        <li>Choose whether to include sharps, flats, or both.</li>
+        <li>
+          Leave sharps and flats unchecked for natural notes only,
+          or select the accidentals you want to include.
+        </li>
         <li>Set a comfortable tempo and press <strong>Start</strong>.</li>
-        <li>A new note appears on beat 1. Find and play it on beat 4.</li>
-        <li>Listen to the reference note on beat 4 to check your answer.</li>
+        <li>Find each displayed note before its reference tone sounds.</li>
+        <li>Listen to the reference tone to check your pitch.</li>
       </ol>
-      <p><strong>Suggested ranges</strong></p>
+
+      <p>
+        Root Mode defaults to G1–C3. Root–Fifth Mode defaults to A1–C3.
+        You can change either range before starting.
+      </p>
+
+      <p><strong>Suggested instrument ranges</strong></p>
       <ul class="range-list">
         <li>Low-G ukulele: G3–A5</li>
         <li>Baritone ukulele: D3–E5</li>
@@ -389,6 +443,8 @@
 
     const naturalPitchClasses = new Set([0, 2, 4, 5, 7, 9, 11]);
 
+    const modeSelect = document.getElementById("mode");
+    const modeInstructions = document.getElementById("modeInstructions");
     const tempoInput = document.getElementById("tempo");
     const lowNoteSelect = document.getElementById("lowNote");
     const highNoteSelect = document.getElementById("highNote");
@@ -450,6 +506,37 @@
 
       lowNoteSelect.value = "48";
       highNoteSelect.value = "72";
+    }
+
+    function applyModeDefaults() {
+      if (modeSelect.value === "rootFifth") {
+        // Root–Fifth Mode default range: A1 through C3.
+        lowNoteSelect.value = "33";
+        highNoteSelect.value = "48";
+      } else {
+        // Root Mode default range: G1 through C3.
+        lowNoteSelect.value = "31";
+        highNoteSelect.value = "48";
+      }
+    }
+
+    function updateModeInstructions() {
+      if (modeSelect.value === "rootFifth") {
+        modeInstructions.innerHTML =
+          "A new root appears on beat 1. " +
+          "Play the root on beat 3, then play the note a perfect fourth below on beat 4. " +
+          "The game sounds both notes so you can check yourself.";
+      } else {
+        modeInstructions.innerHTML =
+          "A new note appears on beat 1. " +
+          "Play that note on beat 4. " +
+          "The game sounds the note on beat 4 so you can check yourself.";
+      }
+    }
+
+    function handleModeChange() {
+      applyModeDefaults();
+      updateModeInstructions();
     }
 
     function getTempo() {
@@ -548,22 +635,73 @@
     }
 
     function playNote(time, frequency, duration) {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
+      /*
+       * Clear-pitch organ-style reference tone.
+       *
+       * A stable harmonic complex is easier to identify by pitch than a very
+       * short or noisy plucked sound. Strong upper harmonics also preserve the
+       * perceived low note on phone and tablet speakers that cannot reproduce
+       * the fundamental frequency strongly.
+       */
+      const noteDuration = Math.max(0.28, duration);
+      const noteEnd = time + noteDuration;
 
-      oscillator.type = "triangle";
-      oscillator.frequency.setValueAtTime(frequency, time);
+      const masterGain = audioContext.createGain();
+      const warmthFilter = audioContext.createBiquadFilter();
 
-      gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(0.34, time + 0.02);
-      gain.gain.setValueAtTime(0.34, time + Math.max(0.03, duration * 0.55));
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      warmthFilter.type = "lowpass";
+      warmthFilter.Q.setValueAtTime(0.55, time);
+      warmthFilter.frequency.setValueAtTime(
+        Math.min(5200, Math.max(1400, frequency * 18)),
+        time
+      );
 
-      oscillator.connect(gain);
-      gain.connect(audioContext.destination);
+      // Smooth onset and release avoid clicks while keeping the pitch stable.
+      masterGain.gain.setValueAtTime(0.0001, time);
+      masterGain.gain.exponentialRampToValueAtTime(0.34, time + 0.018);
+      masterGain.gain.setValueAtTime(
+        0.34,
+        time + Math.max(0.025, noteDuration * 0.64)
+      );
+      masterGain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        noteEnd
+      );
 
-      oscillator.start(time);
-      oscillator.stop(time + duration + 0.02);
+      warmthFilter.connect(masterGain);
+      masterGain.connect(audioContext.destination);
+
+      // Fundamental plus clear harmonics. The slightly stronger second and
+      // third harmonics keep G1–C3 audible on small speakers.
+      const partials = [
+        { multiple: 1, level: 0.72, type: "sine" },
+        { multiple: 2, level: 0.34, type: "sine" },
+        { multiple: 3, level: 0.22, type: "sine" },
+        { multiple: 4, level: 0.12, type: "sine" },
+        { multiple: 5, level: 0.07, type: "sine" }
+      ];
+
+      partials.forEach(function (partial) {
+        const oscillator = audioContext.createOscillator();
+        const partialGain = audioContext.createGain();
+
+        oscillator.type = partial.type;
+        oscillator.frequency.setValueAtTime(
+          frequency * partial.multiple,
+          time
+        );
+
+        partialGain.gain.setValueAtTime(
+          partial.level,
+          time
+        );
+
+        oscillator.connect(partialGain);
+        partialGain.connect(warmthFilter);
+
+        oscillator.start(time);
+        oscillator.stop(noteEnd + 0.03);
+      });
     }
 
     function scheduleUiChange(time, callback) {
@@ -586,6 +724,7 @@
 
     function scheduleBeat(beat, time) {
       const secondsPerBeat = 60 / getTempo();
+      const mode = modeSelect.value;
 
       if (beat === 1) {
         currentNote = chooseRandomNote();
@@ -602,12 +741,23 @@
         showBeat(beat);
       });
 
-      if (beat === 4) {
-        if (currentNote) {
-          playNote(time, currentNote.frequency, secondsPerBeat * 0.78);
+      if (mode === "rootFifth") {
+        if (beat === 3 && currentNote) {
+          playNote(time, currentNote.frequency, secondsPerBeat * 0.68);
+        } else if (beat === 4 && currentNote) {
+          const fifthBelowFrequency =
+            midiToFrequency(currentNote.midi - 5);
+
+          playNote(time, fifthBelowFrequency, secondsPerBeat * 0.78);
+        } else {
+          playClick(time, beat === 1);
         }
       } else {
-        playClick(time, beat === 1);
+        if (beat === 4 && currentNote) {
+          playNote(time, currentNote.frequency, secondsPerBeat * 0.78);
+        } else {
+          playClick(time, beat === 1);
+        }
       }
     }
 
@@ -627,6 +777,60 @@
       }
     }
 
+    function configureAudioSession() {
+      // Safari on recent iOS versions exposes the Audio Session API.
+      // "playback" allows this music-training app to behave like media audio
+      // instead of ambient interface sound.
+      if (navigator.audioSession && "type" in navigator.audioSession) {
+        try {
+          navigator.audioSession.type = "playback";
+        } catch (error) {
+          console.warn("Could not set the audio session type:", error);
+        }
+      }
+    }
+
+    async function unlockAudioContext() {
+      configureAudioSession();
+
+      if (!audioContext) {
+        const AudioContextClass =
+          window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+          throw new Error("This browser does not support Web Audio.");
+        }
+
+        audioContext = new AudioContextClass({
+          latencyHint: "interactive"
+        });
+      }
+
+      // resume() is called directly from the Start-button gesture.
+      const resumePromise =
+        audioContext.state === "suspended"
+          ? audioContext.resume()
+          : Promise.resolve();
+
+      // Prime the iOS audio pipeline with a nearly silent, very short source.
+      // This is deliberately started during the same user gesture.
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      gain.gain.setValueAtTime(0.00001, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.02);
+
+      await resumePromise;
+
+      if (audioContext.state !== "running") {
+        throw new Error("Audio remains suspended.");
+      }
+    }
+
     async function startTrainer() {
       if (running) {
         return;
@@ -640,22 +844,30 @@
       }
 
       tempoInput.value = String(getTempo());
+      statusDisplay.textContent = "Starting audio…";
 
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        await unlockAudioContext();
+      } catch (error) {
+        console.error(error);
+        statusDisplay.textContent =
+          "Audio could not start. Turn up the iPhone media volume, then tap Start again.";
+        return;
       }
-
-      await audioContext.resume();
 
       running = true;
       currentBeat = 1;
       currentNote = null;
       previousSelectionKey = null;
-      nextBeatTime = audioContext.currentTime + 0.08;
+      nextBeatTime = audioContext.currentTime + 0.12;
 
+      modeSelect.disabled = true;
       startButton.disabled = true;
       stopButton.disabled = false;
-      statusDisplay.textContent = "Running";
+      statusDisplay.textContent =
+        modeSelect.value === "rootFifth"
+          ? "Running — Root–Fifth Mode"
+          : "Running — Root Mode";
 
       scheduler();
       schedulerTimer = window.setInterval(scheduler, schedulerIntervalMs);
@@ -676,10 +888,26 @@
       noteDisplay.textContent = "—";
       frequencyDisplay.textContent = "Press Start";
       statusDisplay.textContent = "Stopped";
+      modeSelect.disabled = false;
       startButton.disabled = false;
       stopButton.disabled = true;
     }
 
+
+    document.addEventListener("visibilitychange", function () {
+      if (
+        !document.hidden &&
+        running &&
+        audioContext &&
+        audioContext.state === "suspended"
+      ) {
+        stopTrainer();
+        statusDisplay.textContent =
+          "Audio was paused by iOS. Tap Start to resume.";
+      }
+    });
+
+    modeSelect.addEventListener("change", handleModeChange);
     startButton.addEventListener("click", startTrainer);
     stopButton.addEventListener("click", stopTrainer);
 
@@ -757,6 +985,7 @@
 
     configureInstallUi();
     populateNoteSelectors();
+    handleModeChange();
   </script>
 </body>
 </html>

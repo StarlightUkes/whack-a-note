@@ -75,3 +75,11 @@ CLEAR-PITCH UPDATE
 - Include flats is unchecked by default.
 - The reference sound is now a clean, sustained organ-style harmonic tone.
 - Strong upper harmonics make low pitches easier to hear on small speakers.
+
+
+MODE/HELP CORRECTION
+--------------------
+- Fixed the mode-specific instructions at the top of the app.
+- Expanded How to Play to explain Root and Root–Fifth modes.
+- Removed invalid extra markup and unused backup files.
+- Updated the service-worker cache version.

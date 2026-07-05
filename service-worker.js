@@ -1,4 +1,4 @@
-const CACHE_NAME = "whack-a-note-v7-clear-pitch";
+const CACHE_NAME = "whack-a-note-v8-mode-help-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
