@@ -6,7 +6,7 @@ Each session starts with a full one-measure count-in.
 
 Root Mode: A note appears on beat 2. Find it on beats 3-4 and play it on the next beat 1. The reference pitch sounds on beat 1.
 
-Root-Fifth Mode: A root appears on beat 2 of a prompt measure. In the next measure, play the root on beat 1 and the note a perfect fourth below on beat 2.
+Root-Fifth Mode: The first root appears on beat 2 after the count-in. Play the root on the following beat 1 and the note a perfect fourth below on beat 2. The next root appears immediately on beat 3, giving you beats 3-4 to prepare for the next pattern.
 
 The metronome uses a wood-block-style sound, with a stronger downbeat.
 

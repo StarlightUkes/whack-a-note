@@ -413,9 +413,9 @@
           Find it on beats 3–4 and play it on the next beat 1, when the reference tone sounds.
         </li>
         <li>
-          <strong>Root–Fifth Mode:</strong> After the count-in, a root appears on beat 2 of a prompt measure.
-          On the following response measure, play the root on beat 1 and the note a perfect fourth below on beat 2.
-          Those two notes form a root–fifth pattern. The next prompt follows in the next measure.
+          <strong>Root–Fifth Mode:</strong> After the count-in, the first root appears on beat 2.
+          Play the root on the following beat 1 and the note a perfect fourth below on beat 2.
+          The next root appears immediately on beat 3, giving you beats 3–4 to prepare for the next pattern.
         </li>
       </ul>
 
@@ -554,9 +554,9 @@
     function updateModeInstructions() {
       if (modeSelect.value === "rootFifth") {
         modeInstructions.innerHTML =
-          "After a one-measure count-in, a root appears on beat 2 of a prompt measure. " +
-          "On the following measure, play the root on beat 1 and the note a perfect fourth below on beat 2. " +
-          "The game sounds both notes so you can check yourself.";
+          "After a one-measure count-in, the first root appears on beat 2. " +
+          "Play the root on the following beat 1 and the note a perfect fourth below on beat 2. " +
+          "The next root appears on beat 3, giving you beats 3–4 to prepare. The game sounds both notes so you can check yourself.";
       } else {
         modeInstructions.innerHTML =
           "After a one-measure count-in, a new note appears on beat 2. " +
@@ -852,27 +852,37 @@
           beginTimedPracticeIfNeeded();
           statusDisplay.textContent =
             mode === "rootFifth"
-              ? "Running — see the root on 2; play root–fifth next measure"
+              ? "Running — play root on 1, fifth on 2; next root appears on 3"
               : "Running — see on 2; play on the next 1";
         });
       }
 
       if (mode === "rootFifth") {
-        const isPromptMeasure = measure % 2 === 1;
-
-        if (isPromptMeasure && beat === 2) {
+        // The first prompt appears on beat 2 after the count-in. Thereafter,
+        // each measure is continuous: play root on 1, fifth on 2, then see
+        // the next root on 3 and use beats 3–4 to prepare.
+        if (measure === 1 && beat === 2) {
           currentNote = chooseRandomNote();
-          const noteForThisCycle = currentNote;
+          const firstRoot = currentNote;
 
           scheduleUiChange(time, function () {
-            noteDisplay.textContent = noteForThisCycle.label;
+            noteDisplay.textContent = firstRoot.label;
             frequencyDisplay.textContent =
-              noteForThisCycle.frequency.toFixed(2) + " Hz — play root on 1, fifth on 2";
+              firstRoot.frequency.toFixed(2) + " Hz — play root on 1, fifth on 2";
           });
-        } else if (!isPromptMeasure && beat === 1 && currentNote) {
+        } else if (measure >= 2 && beat === 1 && currentNote) {
           playNote(time, currentNote.frequency, secondsPerBeat * 0.68);
-        } else if (!isPromptMeasure && beat === 2 && currentNote) {
+        } else if (measure >= 2 && beat === 2 && currentNote) {
           playNote(time, midiToFrequency(currentNote.midi - 5), secondsPerBeat * 0.72);
+        } else if (measure >= 2 && beat === 3) {
+          currentNote = chooseRandomNote();
+          const nextRoot = currentNote;
+
+          scheduleUiChange(time, function () {
+            noteDisplay.textContent = nextRoot.label;
+            frequencyDisplay.textContent =
+              nextRoot.frequency.toFixed(2) + " Hz — next root on 1, fifth on 2";
+          });
         }
       } else {
         if (measure >= 2 && beat === 1 && currentNote) {
