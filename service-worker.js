@@ -1,4 +1,4 @@
-const CACHE_NAME = "whack-a-note-v9-practice-timer";
+const CACHE_NAME = "whack-a-note-v10-beat-two-woodblock";
 const APP_SHELL = [
   "./",
   "./index.html",
