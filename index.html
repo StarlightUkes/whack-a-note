@@ -414,8 +414,9 @@
         </li>
         <li>
           <strong>Root–Fifth Mode:</strong> After the count-in, the first root appears on beat 2.
-          Play the root on the following beat 1 and the note a perfect fourth below on beat 2.
-          The next root appears immediately on beat 3, giving you beats 3–4 to prepare for the next pattern.
+          Play the root on the following beat 1 and its fifth on beat 2. For roots below A1,
+          play the fifth above; for A1 and higher, play the fifth below. The next root appears
+          immediately on beat 3, giving you beats 3–4 to prepare for the next pattern.
         </li>
       </ul>
 
@@ -555,7 +556,8 @@
       if (modeSelect.value === "rootFifth") {
         modeInstructions.innerHTML =
           "After a one-measure count-in, the first root appears on beat 2. " +
-          "Play the root on the following beat 1 and the note a perfect fourth below on beat 2. " +
+          "Play the root on the following beat 1 and its fifth on beat 2. " +
+          "For roots below A1, use the fifth above; for A1 and higher, use the fifth below. " +
           "The next root appears on beat 3, giving you beats 3–4 to prepare. The game sounds both notes so you can check yourself.";
       } else {
         modeInstructions.innerHTML =
@@ -873,7 +875,13 @@
         } else if (measure >= 2 && beat === 1 && currentNote) {
           playNote(time, currentNote.frequency, secondsPerBeat * 0.68);
         } else if (measure >= 2 && beat === 2 && currentNote) {
-          playNote(time, midiToFrequency(currentNote.midi - 5), secondsPerBeat * 0.72);
+          // Keep the response note in a practical register: below A1, use the
+          // fifth above (+7 semitones); from A1 upward, use the fifth below
+          // (-5 semitones).
+          const fifthMidi = currentNote.midi < 33
+            ? currentNote.midi + 7
+            : currentNote.midi - 5;
+          playNote(time, midiToFrequency(fifthMidi), secondsPerBeat * 0.72);
         } else if (measure >= 2 && beat === 3) {
           currentNote = chooseRandomNote();
           const nextRoot = currentNote;
